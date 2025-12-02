@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Jungle Genomics (Mini)</title>
+  <style>
+    :root{font-family:system-ui,Segoe UI,Arial;margin:0}
+    body{display:flex;align-items:center;justify-content:center;height:100vh;background:#0b3b1f;color:#fff}
+    #stage{position:relative;width:720px;height:420px;background:linear-gradient(#124,#072);border-radius:8px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.6)}
+    .entity{position:absolute;width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700}
+    #player{background:linear-gradient(#b6ffb6,#28a745);left:20px;top:190px;z-index:3}
+    .dna{background:linear-gradient(#fff,#e0f7ff);color:#036;border-radius:50%;width:28px;height:28px;font-size:14px}
+    .pred{background:linear-gradient(#ffb6b6,#d10000);width:40px;height:40px;font-size:12px}
+    #hud{position:absolute;left:8px;top:8px;padding:6px 10px;background:rgba(0,0,0,.25);border-radius:6px}
+    #message{position:absolute;right:8px;top:8px;padding:6px 10px;background:rgba(0,0,0,.35);border-radius:6px}
+    .small{font-size:13px;opacity:.95}
+    footer{position:absolute;left:8px;bottom:8px;font-size:12px;opacity:.8}
+  </style>
+</head>
+<body>
+  <div id="stage" tabindex="0">
+    <div id="hud" class="small">Score: <span id="score">0</span></div>
+    <div id="message" class="small">Collect DNA &amp; avoid predators</div>
+    <div id="player" class="entity">🧬</div>
+    <footer class="small">Use arrow keys or WASD</footer>
+  </div>
+
+  <script>
+    /* Short single-file mini-game: move player, collect dna, avoid predators */
+    const stage = document.getElementById('stage');
+    const player = document.getElementById('player');
+    const scoreEl = document.getElementById('score');
+    const msg = document.getElementById('message');
+
+    const state = { x:20, y:190, speed:6, score:0, keys:{} };
+
+    // helpers
+    const rand = (a,b)=> Math.floor(Math.random()*(b-a+1))+a;
+    const clamp = (v,min,max)=> Math.max(min, Math.min(max, v));
+
+    // spawn dna & predators
+    function spawnDNA(n=6){
+      for(let i=0;i<n;i++){
+        const d = document.createElement('div'); d.className='entity dna'; d.textContent='DNA';
+        placeRandom(d); stage.appendChild(d);
+      }
+    }
+    function spawnPred(n=2){
+      for(let i=0;i<n;i++){
+        const p = document.createElement('div'); p.className='entity pred'; p.textContent='!';
+        placeRandom(p); stage.appendChild(p);
+      }
+    }
+    function placeRandom(el){
+      const pad=10; const w=stage.clientWidth-40; const h=stage.clientHeight-40;
+      el.style.left = rand(pad,w)+'px'; el.style.top = rand(pad,h)+'px';
+    }
+
+    // keyboard
+    window.addEventListener('keydown', e=> state.keys[e.key.toLowerCase()]=true);
+    window.addEventListener('keyup', e=> state.keys[e.key.toLowerCase()]=false);
+
+    // game loop
+    function loop(){
+      // movement
+      if(state.keys['arrowleft']||state.keys['a']) state.x -= state.speed;
+      if(state.keys['arrowright']||state.keys['d']) state.x += state.speed;
+      if(state.keys['arrowup']||state.keys['w']) state.y -= state.speed;
+      if(state.keys['arrowdown']||state.keys['s']) state.y += state.speed;
+      state.x = clamp(state.x, 6, stage.clientWidth-42);
+      state.y = clamp(state.y, 6, stage.clientHeight-42);
+      player.style.left = state.x + 'px'; player.style.top = state.y + 'px';
+
+      // check collisions with dna
+      document.querySelectorAll('.dna').forEach(d=>{
+        if(hit(player,d)){
+          d.remove(); state.score += 10; scoreEl.textContent = state.score;
+          // small feedback
+          msg.textContent = 'Nice! +10'; setTimeout(()=>msg.textContent='Collect DNA & avoid predators',700);
+        }
+      });
+
+      // predators: simple chase + random drift
+      document.querySelectorAll('.pred').forEach(p=>{
+        const px = parseInt(p.style.left), py = parseInt(p.style.top);
+        const dx = state.x - px, dy = state.y - py;
+        const dist = Math.hypot(dx,dy)||1;
+        const vx = Math.round((dx/dist) * (1 + Math.random()*1.2));
+        const vy = Math.round((dy/dist) * (1 + Math.random()*1.2));
+        p.style.left = clamp(px + vx,6,stage.clientWidth-44)+'px';
+        p.style.top  = clamp(py + vy,6,stage.clientHeight-44)+'px';
+        if(hit(player,p)) endGame();
+      });
+
+      // respawn dna when low
+      if(document.querySelectorAll('.dna').length < 3) spawnDNA(3);
+
+      requestAnimationFrame(loop);
+    }
+
+    function hit(a,b){
+      const ar=a.getBoundingClientRect(), br=b.getBoundingClientRect();
+      return !(ar.right < br.left || ar.left > br.right || ar.bottom < br.top || ar.top > br.bottom);
+    }
+
+    function endGame(){
+      msg.textContent = 'Caught! Final score: '+state.score;
+      // freeze
+      state.keys = {};
+      // remove predators
+      document.querySelectorAll('.pred').forEach(x=>x.remove());
+      // allow restart by clicking
+      stage.addEventListener('click', ()=>location.reload(), {once:true});
+    }
+
+    // init
+    player.style.left = state.x+'px'; player.style.top = state.y+'px';
+    spawnDNA(6); spawnPred(2);
+    stage.focus(); loop();
+  </script>
+</body>
+</html>
