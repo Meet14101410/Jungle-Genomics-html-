@@ -1,0 +1,35 @@
+:root{font-family:system-ui,Segoe UI,Arial,Helvetica,sans-serif}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  display:flex;align-items:center;justify-content:center;
+  background:#0b3b1f;color:#fff;padding:20px;
+}
+#stage{
+  position:relative;width:720px;height:420px;
+  background:linear-gradient(#124,#072);border-radius:8px;
+  overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.6);
+}
+.entity{
+  position:absolute;display:flex;align-items:center;justify-content:center;
+  width:36px;height:36px;border-radius:6px;font-weight:700;
+  user-select:none;
+}
+#player{background:linear-gradient(#b6ffb6,#28a745);left:20px;top:190px;z-index:3}
+.dna{
+  background:linear-gradient(#fff,#e0f7ff);color:#036;
+  border-radius:50%;width:28px;height:28px;font-size:13px;padding:4px;
+  display:flex;align-items:center;justify-content:center;
+}
+.pred{
+  background:linear-gradient(#ffb6b6,#d10000);
+  width:40px;height:40px;font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+}
+#hud,#message{
+  position:absolute;padding:6px 10px;border-radius:6px;font-size:13px;
+  background:rgba(0,0,0,.25);
+}
+#hud{left:8px;top:8px}
+#message{right:8px;top:8px;background:rgba(0,0,0,.35)}
+footer{position:absolute;left:8px;bottom:8px;font-size:12px;opacity:.85}
