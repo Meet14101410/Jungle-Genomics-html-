@@ -1,0 +1,55 @@
+const stage = document.getElementById('stage');
+const player = document.getElementById('player');
+const scoreEl = document.getElementById('score');
+const msg = document.getElementById('message');
+
+const S = { x:20, y:190, speed:6, score:0, keys:{} };
+const rand = (a,b)=> Math.floor(Math.random()*(b-a+1))+a;
+const clamp = (v,min,max)=> Math.max(min,Math.min(max,v));
+
+function placeRandom(el){
+  const w = stage.clientWidth-40, h = stage.clientHeight-40;
+  el.style.left = rand(10,w) + "px";
+  el.style.top  = rand(10,h) + "px";
+}
+
+function spawnDNA(n=6){
+  for(let i=0;i<n;i++){
+    let d=document.createElement("div");
+    d.className="entity dna"; d.textContent="DNA";
+    placeRandom(d); stage.appendChild(d);
+  }
+}
+function spawnPred(n=2){
+  for(let i=0;i<n;i++){
+    let p=document.createElement("div");
+    p.className="entity pred"; p.textContent="!";
+    placeRandom(p); stage.appendChild(p);
+  }
+}
+
+window.addEventListener("keydown",e=>S.keys[e.key.toLowerCase()]=true);
+window.addEventListener("keyup",e=>S.keys[e.key.toLowerCase()]=false);
+
+function hit(a,b){
+  const A=a.getBoundingClientRect(),B=b.getBoundingClientRect();
+  return !(A.right<B.left||A.left>B.right||A.bottom<B.top||A.top>B.bottom);
+}
+
+function endGame(){
+  msg.textContent = "Caught! Final score: " + S.score;
+  S.keys = {};
+  document.querySelectorAll(".pred").forEach(p=>p.remove());
+  stage.addEventListener("click",()=>location.reload(),{once:true});
+}
+
+function loop(){
+  // movement
+  if(S.keys["a"]||S.keys["arrowleft"])  S.x -= S.speed;
+  if(S.keys["d"]||S.keys["arrowright"]) S.x += S.speed;
+  if(S.keys["w"]||S.keys["arrowup"])    S.y -= S.speed;
+  if(S.keys["s"]||S.keys["arrowdown"])  S.y += S.speed;
+  
+  S.x = clamp(S.x,6,stage.clientWidth-42);
+  S.y = clamp(S.y,6,stage.clientHeight-42);
+  player.style.left
